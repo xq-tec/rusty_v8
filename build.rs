@@ -348,7 +348,7 @@ fn static_lib_url() -> String {
   let target = env::var("TARGET").unwrap();
 
   // Note: we always use the release build on windows.
-  if cfg!(target_os = "windows") {
+  if target.contains("windows") {
     return format!("{}/v{}/rusty_v8_release_{}.lib.gz", base, version, target);
   }
   // Use v8 in release mode unless $V8_FORCE_DEBUG=true
@@ -614,15 +614,18 @@ fn print_link_flags() {
     }
   }
 
-  if cfg!(target_os = "windows") {
+  if std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "windows" {
     println!("cargo:rustc-link-lib=dylib=winmm");
     println!("cargo:rustc-link-lib=dylib=dbghelp");
   }
 
-  if cfg!(target_env = "msvc") {
+  if std::env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default() == "msvc" {
     // On Windows, including libcpmt[d]/msvcprt[d] explicitly links the C++
     // standard library, which libc++ needs for exception_ptr internals.
-    if cfg!(target_feature = "crt-static") {
+    if std::env::var("CARGO_CFG_TARGET_FEATURE")
+      .unwrap_or_default()
+      .contains("crt-static")
+    {
       println!("cargo:rustc-link-lib=libcpmt");
     } else {
       println!("cargo:rustc-link-lib=dylib=msvcprt");
